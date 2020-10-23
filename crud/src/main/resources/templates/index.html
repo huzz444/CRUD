@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+	<head>
+		<meta charset="utf-8">
+		<title>用户信息表</title>
+		<link rel="stylesheet" th:href="@{/layui/css/layui.css}" />
+		<script th:src="@{/layui/layui.all.js}" charset="utf-8" ></script>
+		<script th:src="@{/js/jQuery.js}"></script>
+	</head>
+
+	<body>
+		<!-- 头部导航 -->
+		<div class="layui-layout layui-layout-admin">
+			<div class="layui-header">
+			<!-- 头部区域 -->
+		        <ul class="layui-nav layui-bg-green">
+		    	<li class="layui-nav-item"><a href="">菜单导航</a></li>
+		    	<li class="layui-nav-item">
+		    		<a href="javascript:;">用户管理</a>
+		    		<dl class="layui-nav-child">
+		    		  <dd><a href="">用户信息</a></dd>
+		    		  <dd><a href="">后台模版</a></dd>
+		    		  <dd><a href="">电商平台</a></dd>
+		    		</dl>
+		    	</li>
+		    	<li class="layui-nav-item"><a href="">大数据</a></li>
+		    	<li class="layui-nav-item">
+		    		<a href="javascript:;">用户信息</a>
+		    		<dl class="layui-nav-child">
+		    		  <dd><a href="">移动模块</a></dd>
+		    		  <dd><a href="">后台模版</a></dd>
+		    		  <dd><a href="">电商平台</a></dd>
+		    		</dl>
+		    	</li>
+		    	<li class="layui-nav-item"><a href="">社区</a></li>
+		    </ul>
+		  </div>
+		</div>
+		    
+		<!-- 主体 -->
+		<table id="tableId" lay-filter="test">
+				<!-- // -->
+			</table>
+
+		<!--搜索框-->
+		<div class="demoTable">
+			用户名：
+			<div class="layui-inline">
+				<input class="layui-input" name="likeName" id="demoReload" autocomplete="off">
+			</div>
+			<button class="layui-btn" data-type="reload"><i class="layui-icon"></i>搜索</button>
+		</div>
+
+		<!--头部工具栏模板-->
+		<script type="text/html" id="toolbarDemo">
+			<div class="layui-btn-container">
+				<button class="layui-btn layui-btn-sm" lay-event="getCheckData">获取选中行数据</button>
+				<button class="layui-btn layui-btn-sm" lay-event="getCheckLength">获取选中数目</button>
+				<button class="layui-btn layui-btn-sm" lay-event="isAll">验证是否全选</button>
+				<button class="layui-btn layui-btn-sm" lay-event="addUser">添加</button>
+
+			</div>
+		</script>
+
+		<!--右侧操作栏模板-->
+		<script type="text/html" id="barDemo">
+			<!--编辑-->
+			<a class="layui-btn layui-btn-xs" lay-event="edit"><i class="layui-icon layui-icon-edit"></i></a>
+			<!--删除-->
+			<a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del"><i class="layui-icon layui-icon-delete"></i></a>
+		</script>
+
+		<script>
+		/*航栏模块*/
+		layui.use('element', function(){
+			var layer = layui.layer;
+		  var element = layui.element; //导航的hover效果、二级菜单等功能，需要依赖element模块
+		 	// --监听导航点击--
+		  element.on('nav(demo)', function(elem){
+		    console.log(elem)
+		    layer.msg(elem.text());
+		  });
+		});
+
+		/*表格模块*/
+		layui.use('table', function(){
+
+			var table = layui.table;
+			table.render({
+				id: 'userTable'
+				,elem: '#tableId'
+				,height: 522
+				,width: 1520
+				,url: '/crud/selectAll' //数据接口
+				// ,where: {
+				// 	likeName:name
+				// }
+				,page: true //开启分页
+				,toolbar: '#toolbarDemo' //开启头部工具栏，并为其绑定左侧模板
+				,defaultToolbar: ['filter', 'exports', 'print', { //自定义头部工具栏右侧图标。如无需自定义，去除该参数即可
+					title: '提示'
+					,layEvent: 'LAYTABLE_TIPS'
+					,icon: 'layui-icon-tips'
+				}]
+				,cols: [
+					[ //表头
+					{type: 'checkbox', fixed: 'left'}
+					,{field: 'id', title: 'ID', width:'7.5%', sort: true, fixed: 'left', align: 'center'}
+					,{field: 'name', title: '用户名', width:'12.5%',align: 'center'}
+					,{field: 'sex', title: '性别', width:'7.5%', sort: true, align: 'center'}
+					,{field: 'age', title: '出生日期', width:'22.5%', sort: true, align: 'center'}
+					,{field: 'email', title: 'Email', width: '32%', align: 'center'}
+					,{fixed: 'right', title:'操作', toolbar: '#barDemo', width:'15%', align: 'center'}
+					]
+				]
+			});
+
+			/*查询重载*/
+			var $ = layui.$, active = {
+				reload: function(){
+					debugger
+					var demoReload = $("#demoReload");
+					var val = demoReload.val();
+					//执行重载
+					table.reload('userTable', {
+						page: {
+							curr: 1 //重新从第 1 页开始
+						}
+						,where: {
+							likeName: demoReload.val().trim()
+						}
+					},'data');
+				}
+			};
+			//触发查询重载
+			$(".demoTable .layui-btn").on('click', function(){
+				var type = $(this).data('type');
+				active[type] ? active[type].call(this) : '';
+			});
+
+			//头工具栏事件
+			table.on('toolbar(test)', function(obj){
+				var checkStatus = table.checkStatus(obj.config.id);
+				switch(obj.event){
+					case 'getCheckData':
+						var data = checkStatus.data;
+						layer.alert(JSON.stringify(data));
+						break;
+					case 'getCheckLength':
+						var data = checkStatus.data;
+						layer.msg('选中了：'+ data.length + ' 个');
+						break;
+					case 'isAll':
+						layer.msg(checkStatus.isAll ? '全选': '未全选');
+						break;
+					case 'addUser':
+						//弹窗
+						var html = '<form class="layui-form" >' +
+								'	<div class="layui-form-item">' +
+								'   	 <label class="layui-form-label">姓名:</label>' +
+								'   	 <div class="layui-input-block">' +
+								'    	 	<input type="text" name="setName" id="setNameId" required  lay-verify="required" placeholder="请输入你的姓名" autocomplete="off" class="layui-input">' +
+								'   	</div>' +
+								'  	</div>' +
+								'	<div class="layui-form-item">' +
+								'   	 <label class="layui-form-label">性别:</label>' +
+								'   	 <div class="layui-input-block">' +
+								'    	 	<input type="radio" name="setSex" value="男" title="男" checked />' +
+								'			<input type="radio" name="setSex" value="女" title="女" />' +
+								'   	</div>' +
+								'  	</div>' +
+								'	<div class="layui-form-item">' +
+								'   	<label class="layui-form-label">出生日期:</label>' +
+								'   	<div class="layui-input-block">' +
+								'    		<input type="text" name="setAge" id="setAgeId" required  lay-verify="required|date" placeholder="请输入你的出生日期" autocomplete="off" class="layui-input">' +
+								'   	</div>' +
+								'  	</div>' +
+								'	<div class="layui-form-item">' +
+								'   	<label class="layui-form-label">Email:</label>' +
+								'   	<div class="layui-input-block">' +
+								'    		<input type="text" name="setEmail" id="setEmailId" required  lay-verify="required" placeholder="请输入你的Email" autocomplete="off" class="layui-input">' +
+								'   	</div>' +
+								'  	</div>' +
+								'</form>'
+						;
+						//添加用户
+						layer.open({
+							title: '添加一个用户',
+							content: html,
+							area: ['550px', '360px'],
+							btnAlign: 'c',
+							btn: ['取消', '确定'],
+							success: function (index,layero) {
+								//刷新渲染radio单选框
+								layui.form.render('radio');
+								//日期laydate
+								layui.laydate.render({
+									elem: '#setAgeId' //指定元素
+								})
+							},//success
+							yes: function () {
+								//取消按钮
+							},
+							btn2: function (index,layero) {
+								// layer.alert("确认了");
+
+								//获取修改后的表单值
+								var user = {
+									name: $("#setNameId").val(),
+									sex:  $("input[name='setSex']:checked").val(),	//$("#setAgeId").val(),
+									age: $("#setAgeId").val(),
+									email: $("#setEmailId").val()
+								};
+
+								//执行更新操作
+								$.ajax({
+									url: '/crud/addUser',
+									type: 'POST',
+									data: JSON.stringify(user),
+											// {
+										// "addName": setName,
+										// "addSex": setSex,
+										// "addAge": setAge,
+										// "addEmail": setEmail
+									// },
+									contentType: 'application/json',
+									success: function (result) {
+										if(result){
+											layer.msg("添加成功",{
+												width:120,
+												time:1600
+											});
+											//刷新页面
+											table.reload('userTable',{
+												page:{ curr: 1 }
+											});
+										}
+									},
+									error: function () {
+										layer.msg("添加失败");
+									}
+								});//ajax
+							}//open.btn2
+						});//open
+						break;
+
+						//自定义头工具栏右侧图标 - 提示
+					case 'LAYTABLE_TIPS':
+						layer.alert('这是工具栏右侧自定义的一个图标按钮');
+						break;
+				};
+			});
+
+			//监听行工具事件
+			table.on('tool(test)', function(obj){
+				//获取表格该条记录
+				var data = obj.data;
+				// console.log(obj)
+				// console.info(data);
+
+				//点击时触发事件
+				if(obj.event === 'del'){
+					layui.layer.confirm('是否确认删除?',function (index) {
+						$.ajax({
+							url:'/crud/removeUser',
+							type:'POST',
+							data:{
+								id: data.id
+							},
+							success: function (judge) {
+								if(judge){
+									obj.del();
+									layui.layer.msg('删除成功', {time:1600, title:['提示','font-size:18px'],offset:'auto',icon:1});
+								}
+							},
+							error: function () {
+								layui.layer.msg('删除不成功', {time:1600, title:['提示','font-size:18px'],offset:'auto',icon:2});
+							}
+						});
+						layer.close(index);
+					});
+				}else if(obj.event === 'edit'){
+
+					//弹框内容
+					var html = '<form class="layui-form" >' +
+							'	<div class="layui-form-item">' +
+							'   	 <label class="layui-form-label">姓名:</label>' +
+							'   	 <div class="layui-input-block">' +
+							'    	 	<input type="text" name="newName" id="nameId" required  lay-verify="required" placeholder="请输入你的姓名" autocomplete="off" class="layui-input">' +
+							'   	</div>' +
+							'  	</div>' +
+							'	<div class="layui-form-item">' +
+							'   	 <label class="layui-form-label">性别:</label>' +
+							'   	 <div class="layui-input-block">' +
+							' 		 	<input type="radio" name="newSex" value="男" title="男" />' +
+							'			<input type="radio" name="newSex" value="女" title="女" />' +
+							'   	</div>' +
+							'  	</div>' +
+							'	<div class="layui-form-item">' +
+							'   	<label class="layui-form-label">年龄:</label>' +
+							'   	<div class="layui-input-block">' +
+							'    		<input type="text" name="newAge" id="ageId" required lay-verify="required|date"  lay-verify="required" placeholder="请输入你的生日" autocomplete="off" class="layui-input">' +
+							'   	</div>' +
+							'  	</div>' +
+							'	<div class="layui-form-item">' +
+							'   	<label class="layui-form-label">Email:</label>' +
+							'   	<div class="layui-input-block">' +
+							'    		<input type="text" name="newEmail" id="emailId" required  lay-verify="required" placeholder="请输入你的Email" autocomplete="off" class="layui-input">' +
+							'   	</div>' +
+							'  	</div>' +
+							'</form>'
+					;
+					//弹出层
+					 var layer = layui.layer;
+					layer.open({
+						title: '修改用户信息',
+						content: html,
+						area: ['550px', '360px'],
+						btnAlign: 'c',
+						btn: ['取消', '确定'],
+						success: function () {
+							//给表单赋默认值
+							$("#nameId").val(data.name);
+							// $("input[name='newSex']:checked").val(data.sex);
+							$("#ageId").val(data.age);
+							$("#emailId").val(data.email);
+
+							//刷新表单radio
+							layui.form.render('radio');
+
+							layui.laydate.render({
+								elem: '#ageId' //指定元素
+							});
+						},//success
+						yes: function () {
+							//取消按钮
+						},
+						btn2: function (index,layero) {
+							// layer.alert("确认了");
+
+							//获取修改后的表单值
+							var user={
+								id: data.id,
+								name: $("#nameId").val(),
+								sex: $("input[name='newSex']:checked").val(),
+								age: $("#ageId").val(),
+								email: $("#emailId").val()
+							}
+							//执行更新操作
+							$.ajax({
+								url: '/crud/updateUser',
+								type: 'POST',
+								data: JSON.stringify(user),
+								contentType: 'application/json',
+								success: function (judgeUpdate) {
+									//是否修改成功
+									if(judgeUpdate){
+										layer.msg('修改成功', {time:1600, title:['提示','font-size:18px'],/*offset:['10px','350px'],*/ icon:1});
+										//更新显示内容
+										table.reload('userTable');
+									}else{
+										layer.msg('修改不成功', {time:1600, title:['提示','font-size:18px'],offset:'auto',icon:2});
+									}
+								},
+								error: function () {
+									layer.msg("修改失败");
+								}
+							});//ajax
+						}//open.btn2
+					})//open
+
+
+				}//if
+
+			});//
+		});
+		</script>
+	</body>
+</html>
